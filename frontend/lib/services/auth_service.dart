@@ -1,18 +1,15 @@
 import 'dart:convert';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
 
 class AuthService {
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email', 'profile', 'openid'],
-  );
-
-  Future<GoogleSignInAccount?> signInWithGoogle() async {
-    try {
-      final account = await _googleSignIn.signIn();
-      return account;
-    } catch (e) {
-      return null;
+  /// Opens the backend web OAuth login URL in browser.
+  Future<void> openWebOAuth() async {
+    final uri = Uri.parse('http://10.0.2.2:8000/auth/google/login');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not launch $uri';
     }
   }
 
@@ -20,7 +17,6 @@ class AuthService {
     String idToken,
   ) async {
     final url = Uri.parse('http://10.0.2.2:8000/auth/token');
-    // for Android emulator use 10.0.2.2; adjust for real device
     final resp = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
