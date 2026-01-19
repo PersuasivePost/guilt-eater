@@ -1,58 +1,44 @@
-from fastapi import APIRouter, Request, Depends, HTTPException
-from fastapi.responses import RedirectResponse, JSONResponse
-from ..auth.oauth import oauth, get_google_user
-from ..auth import security
-from ..db.session import get_db
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
+from auth import security
+from db.session import get_db
 from sqlalchemy.orm import Session
-from ..models.models import User
+from models.models import User
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
 import os
 
 router = APIRouter()
 
-
-@router.get('/google/login')
-async def login(request: Request):
-    redirect_uri = os.getenv('GOOGLE_REDIRECT_URI')
-    return await oauth.google.authorize_redirect(request, redirect_uri)
-
-
-@router.get('/google/callback')
-async def callback(request: Request, db: Session = Depends(get_db)):
-    userinfo = await get_google_user(request)
-    if not userinfo:
-        raise HTTPException(status_code=400, detail='Google auth failed')
-
-    # find or create user
-    email = userinfo.get('email')
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        user = User(email=email, name=userinfo.get('name'), picture=userinfo.get('picture'))
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-
-    token = security.create_access_token(user.id)
-    # For web flow redirect to frontend with token (adjust frontend URL in env later)
-    frontend_redirect = os.getenv('FRONTEND_REDIRECT', 'http://localhost:3000')
-    return RedirectResponse(f"{frontend_redirect}/auth?token={token}")
+# Get Google Client ID from environment
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 
 
 @router.post('/token')
 async def token_exchange(payload: dict, db: Session = Depends(get_db)):
-    """Accepts a Google id_token (from mobile) and returns our JWT.
+    """Accepts a Google id_token (from Android mobile) and returns our JWT.
     payload: {"id_token": "..."}
     """
-    id_token = payload.get('id_token')
-    if not id_token:
+    token_string = payload.get('id_token')
+    if not token_string:
         raise HTTPException(status_code=400, detail='id_token required')
 
-    # Verify id_token via authlib / google
+    # Verify id_token using Google's official library
     try:
-        # Use oauth client to parse id_token
-        claims = await oauth.google.parse_id_token(None, {'id_token': id_token, 'access_token': None})
-    except Exception:
-        # fallback - let authlib handle errors upstream
-        raise HTTPException(status_code=400, detail='invalid id_token')
+        print(f"Attempting to verify id_token with CLIENT_ID: {GOOGLE_CLIENT_ID}")
+        # Verify the token
+        claims = id_token.verify_oauth2_token(
+            token_string, 
+            google_requests.Request(), 
+            GOOGLE_CLIENT_ID
+        )
+        print(f"Token verified successfully! Claims: {claims}")
+    except ValueError as e:
+        print(f"Token verification failed: {str(e)}")
+        raise HTTPException(status_code=400, detail=f'invalid id_token: {str(e)}')
+    except Exception as e:
+        print(f"Unexpected error: {type(e).__name__}: {str(e)}")
+        raise HTTPException(status_code=400, detail=f'token verification error: {str(e)}')
 
     email = claims.get('email')
     if not email:
@@ -60,10 +46,14 @@ async def token_exchange(payload: dict, db: Session = Depends(get_db)):
 
     user = db.query(User).filter(User.email == email).first()
     if not user:
+        print(f"Creating new user: {email}")
         user = User(email=email, name=claims.get('name'), picture=claims.get('picture'))
         db.add(user)
         db.commit()
         db.refresh(user)
+    else:
+        print(f"User already exists: {email}")
 
     token = security.create_access_token(user.id)
+    print(f"Successfully created JWT for user {user.id}")
     return JSONResponse({'access_token': token, 'token_type': 'bearer'})

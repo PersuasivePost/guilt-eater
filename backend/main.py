@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .db.session import engine, Base
-from .api.router import router as api_router
-from .auth.router import router as auth_router
+# Use package-style imports without leading dot so the module can be run as a script from the
+# backend directory (python main.py) without triggering relative-import-with-no-parent errors.
+from db.session import engine, Base
+from api.router import router as api_router
+from auth.router import router as auth_router
 
 app = FastAPI(title="Guilt Eater Backend")
 

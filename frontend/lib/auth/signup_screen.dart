@@ -1,21 +1,43 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../screens/welcome_screen.dart';
 
-final _authService = AuthService();
-
-class SignupScreen extends StatelessWidget {
+class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
-  Future<void> _startGoogleSignUp(BuildContext context) async {
+  @override
+  State<SignupScreen> createState() => _SignupScreenState();
+}
+
+class _SignupScreenState extends State<SignupScreen> {
+  final _authService = AuthService();
+  bool _isLoading = false;
+
+  Future<void> _startGoogleSignUp() async {
+    setState(() => _isLoading = true);
+
     try {
-      await _authService.openWebOAuth();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Opened browser for Google signup')),
-      );
+      final token = await _authService.signInWithGoogle();
+
+      if (token != null && mounted) {
+        // Navigate to welcome screen on success
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const WelcomeScreen(username: 'User'),
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to open browser: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Sign up failed: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -38,17 +60,19 @@ class SignupScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 48),
-            ElevatedButton.icon(
-              onPressed: () => _startGoogleSignUp(context),
-              icon: const Icon(Icons.login),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              label: const Text(
-                'Sign up with Google',
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ElevatedButton.icon(
+                    onPressed: _startGoogleSignUp,
+                    icon: const Icon(Icons.login),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    label: const Text(
+                      'Sign up with Google',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
             const SizedBox(height: 16),
             TextButton(
               onPressed: () {

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from ..models.models import User, Goal, WalletLedger, Violation, Transaction
+from models.models import User, Goal, WalletLedger, Violation, Transaction
 
 
 def create_user(db: Session, **kwargs) -> User:
