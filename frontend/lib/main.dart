@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/auth/login_screen.dart';
+import 'package:frontend/screens/onboarding/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,10 +13,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Guilt Eater',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
         useMaterial3: true,
+        scaffoldBackgroundColor: Colors.black,
       ),
-      home: const LoginScreen(),
+      home: const SplashScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
