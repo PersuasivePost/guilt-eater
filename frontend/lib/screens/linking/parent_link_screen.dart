@@ -165,8 +165,14 @@ class _ParentLinkScreenState extends State<ParentLinkScreen> {
                           size: 200.0,
                           backgroundColor: Colors.white,
                           // updated: use eyeStyle and dataModuleStyle instead of deprecated foregroundColor
-                          eyeStyle: QrEyeStyle(eyeShape: QrEyeShape.square, color: Colors.black),
-                          dataModuleStyle: QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Colors.black),
+                          eyeStyle: QrEyeStyle(
+                            eyeShape: QrEyeShape.square,
+                            color: Colors.black,
+                          ),
+                          dataModuleStyle: QrDataModuleStyle(
+                            dataModuleShape: QrDataModuleShape.square,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
                     const SizedBox(height: 32),

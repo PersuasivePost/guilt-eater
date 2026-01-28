@@ -22,7 +22,7 @@ class AuthService {
   /// [role] can be 'individual', 'parent', or 'child'
   Future<String?> signInWithGoogle({String role = 'individual'}) async {
     try {
-  debugPrint('Starting Google Sign-In with role: $role...');
+      debugPrint('Starting Google Sign-In with role: $role...');
 
       // Try silent sign-in first (returns previously signed in account if available)
       GoogleSignInAccount? account = await _googleSignIn.signInSilently();
@@ -45,7 +45,9 @@ class AuthService {
         throw Exception('Failed to get ID token from Google');
       }
 
-  debugPrint('Got ID token, exchanging with backend at $_backendUrl/auth/token');
+      debugPrint(
+        'Got ID token, exchanging with backend at $_backendUrl/auth/token',
+      );
 
       // Exchange id_token with backend for our JWT, including role
       final response = await http
@@ -63,7 +65,7 @@ class AuthService {
             },
           );
 
-  debugPrint('Backend response status: ${response.statusCode}');
+      debugPrint('Backend response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -72,10 +74,10 @@ class AuthService {
         // Store the token securely
         await _storage.write(key: _tokenKey, value: accessToken);
 
-  debugPrint('Successfully got JWT token for role: $role');
+        debugPrint('Successfully got JWT token for role: $role');
         return accessToken;
       } else {
-  debugPrint('Backend error: ${response.statusCode} - ${response.body}');
+        debugPrint('Backend error: ${response.statusCode} - ${response.body}');
         throw Exception('Backend auth failed: ${response.body}');
       }
     } on PlatformException catch (e) {
@@ -95,7 +97,7 @@ class AuthService {
 
       rethrow;
     } catch (e) {
-  debugPrint('Sign in error: $e');
+      debugPrint('Sign in error: $e');
       rethrow;
     }
   }

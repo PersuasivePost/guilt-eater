@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../../services/auth_service.dart';
+import 'link_success_screen.dart';
 
 class ChildScanScreen extends StatefulWidget {
   const ChildScanScreen({super.key});
@@ -8,10 +13,97 @@ class ChildScanScreen extends StatefulWidget {
 }
 
 class _ChildScanScreenState extends State<ChildScanScreen> {
-  final bool _isScanning = false;
+  final MobileScannerController _scannerController = MobileScannerController();
+  final _authService = AuthService();
+  bool _isProcessing = false;
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _scannerController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleQRCode(String qrData) async {
+    if (_isProcessing) return;
+
+    setState(() {
+      _isProcessing = true;
+      _errorMessage = null;
+    });
+
+    try {
+      // QR data format: "parent_id:code" or just "code"
+      String code;
+      if (qrData.contains(':')) {
+        code = qrData.split(':').last;
+      } else {
+        code = qrData;
+      }
+
+      // Validate code format (should be 6 digits)
+      if (code.length != 6 || !RegExp(r'^\d+$').hasMatch(code)) {
+        throw Exception('Invalid QR code format');
+      }
+
+      final token = await _authService.getToken();
+      if (token == null) {
+        throw Exception('Not authenticated');
+      }
+
+      // Call backend to verify and link
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8000/api/linking/verify-linking-code'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'code': code}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => LinkSuccessScreen(
+                parentName: data['parent_name'] ?? 'Parent',
+                childName: data['child_name'] ?? 'Child',
+              ),
+            ),
+          );
+        }
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['detail'] ?? 'Failed to verify code');
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString().replaceAll('Exception: ', '');
+        _isProcessing = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_errorMessage ?? 'Error processing QR code'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+
+      // Allow scanning again after 2 seconds
+      await Future.delayed(const Duration(seconds: 2));
+      setState(() {
+        _isProcessing = false;
+        _errorMessage = null;
+      });
+    }
+  }
 
   void _enterManually() {
-    // Navigate to child login screen (manual code entry)
+    // Navigate back to child login screen (manual code entry)
     Navigator.pop(context);
   }
 
@@ -38,6 +130,16 @@ class _ChildScanScreenState extends State<ChildScanScreen> {
                       style: TextStyle(color: Colors.white70, fontSize: 16),
                     ),
                   ),
+                  const Spacer(),
+                  if (_isProcessing)
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -57,9 +159,16 @@ class _ChildScanScreenState extends State<ChildScanScreen> {
                         color: Colors.white,
                       ),
                     ),
+                    const SizedBox(height: 16),
+
+                    // Instructions
+                    const Text(
+                      'Point your camera at the QR code',
+                      style: TextStyle(fontSize: 16, color: Colors.white70),
+                    ),
                     const SizedBox(height: 40),
 
-                    // Camera View Placeholder
+                    // Camera View
                     Container(
                       width: 280,
                       height: 280,
@@ -67,97 +176,83 @@ class _ChildScanScreenState extends State<ChildScanScreen> {
                         border: Border.all(color: Colors.white30, width: 2),
                         borderRadius: BorderRadius.circular(16),
                       ),
+                      clipBehavior: Clip.hardEdge,
                       child: Stack(
                         children: [
-                          // Camera placeholder
-                          Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.qr_code_scanner,
-                                  size: 80,
-                                  color: Colors.white30,
-                                ),
-                                const SizedBox(height: 16),
-                                const Text(
-                                  'Camera View',
-                                  style: TextStyle(
-                                    color: Colors.white30,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          MobileScanner(
+                            controller: _scannerController,
+                            onDetect: (capture) {
+                              final List<Barcode> barcodes = capture.barcodes;
+                              for (final barcode in barcodes) {
+                                if (barcode.rawValue != null &&
+                                    !_isProcessing) {
+                                  _handleQRCode(barcode.rawValue!);
+                                  break;
+                                }
+                              }
+                            },
                           ),
 
-                          // Scanning frame
+                          // Scanning frame overlay
                           Center(
                             child: Container(
                               width: 200,
                               height: 200,
                               decoration: BoxDecoration(
                                 border: Border.all(
-                                  color: Colors.white,
+                                  color: _isProcessing
+                                      ? Colors.green
+                                      : Colors.white,
                                   width: 3,
                                 ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Center(
-                                child: _isScanning
-                                    ? const CircularProgressIndicator(
-                                        color: Colors.white,
-                                      )
-                                    : const Text(
-                                        'Scanning\nArea',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                              ),
                             ),
                           ),
 
-                          // Corner markers
-                          ..._buildCornerMarkers(),
+                          // Error overlay
+                          if (_errorMessage != null)
+                            Container(
+                              color: Colors.black87,
+                              child: Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.error_outline,
+                                        color: Colors.red,
+                                        size: 48,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        _errorMessage!,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Instructions
-                    const Text(
-                      'Position QR code\nwithin the frame',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16, color: Colors.white70),
                     ),
                     const SizedBox(height: 40),
 
                     // Manual Entry Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: OutlinedButton(
-                        onPressed: _enterManually,
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(
-                            color: Colors.white30,
-                            width: 1,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Enter Code Manually',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
+                    TextButton(
+                      onPressed: _isProcessing ? null : _enterManually,
+                      child: const Text(
+                        'Enter Code Manually',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16,
+                          decoration: TextDecoration.underline,
                         ),
                       ),
                     ),
@@ -166,47 +261,6 @@ class _ChildScanScreenState extends State<ChildScanScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  List<Widget> _buildCornerMarkers() {
-    return [
-      // Top-left
-      Positioned(top: 30, left: 30, child: _buildCorner(topLeft: true)),
-      // Top-right
-      Positioned(top: 30, right: 30, child: _buildCorner(topRight: true)),
-      // Bottom-left
-      Positioned(bottom: 30, left: 30, child: _buildCorner(bottomLeft: true)),
-      // Bottom-right
-      Positioned(bottom: 30, right: 30, child: _buildCorner(bottomRight: true)),
-    ];
-  }
-
-  Widget _buildCorner({
-    bool topLeft = false,
-    bool topRight = false,
-    bool bottomLeft = false,
-    bool bottomRight = false,
-  }) {
-    return Container(
-      width: 20,
-      height: 20,
-      decoration: BoxDecoration(
-        border: Border(
-          top: (topLeft || topRight)
-              ? const BorderSide(color: Colors.white, width: 3)
-              : BorderSide.none,
-          left: (topLeft || bottomLeft)
-              ? const BorderSide(color: Colors.white, width: 3)
-              : BorderSide.none,
-          right: (topRight || bottomRight)
-              ? const BorderSide(color: Colors.white, width: 3)
-              : BorderSide.none,
-          bottom: (bottomLeft || bottomRight)
-              ? const BorderSide(color: Colors.white, width: 3)
-              : BorderSide.none,
         ),
       ),
     );
