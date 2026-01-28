@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../services/auth_service.dart';
 import '../screens/linking/link_success_screen.dart';
+import '../screens/linking/child_scan_screen.dart';
 
 class ChildLoginScreen extends StatefulWidget {
   const ChildLoginScreen({super.key});
@@ -20,6 +21,60 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
   );
   final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
   bool _isLoading = false;
+  bool _isAuthenticated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthentication();
+  }
+
+  Future<void> _checkAuthentication() async {
+    final token = await _authService.getToken();
+    setState(() {
+      _isAuthenticated = token != null;
+    });
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final token = await _authService.signInWithGoogle(role: 'child');
+
+      if (token != null) {
+        setState(() {
+          _isAuthenticated = true;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Signed in successfully! Now enter the parent code.',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        throw Exception('Sign in failed - no token received');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sign in failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -45,6 +100,17 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
   }
 
   void _handleContinue() async {
+    // Check if user is authenticated first
+    if (!_isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please sign in with Google first'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     final code = _controllers.map((c) => c.text).join();
     if (code.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -65,6 +131,7 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
       }
 
       final response = await http.post(
+        // Uri.parse('http://10.0.2.2:8000/api/linking/verify-linking-code')
         Uri.parse('http://10.0.2.2:8000/api/linking/verify-linking-code'),
         headers: {
           'Authorization': 'Bearer $token',
@@ -104,13 +171,22 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
     }
   }
 
-  void _handleScanQR() {
-    // TODO: Implement QR code scanning
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('QR scanning feature coming soon!'),
-        backgroundColor: Colors.orange,
-      ),
+  void _handleScanQR() async {
+    // Check if user is authenticated first
+    if (!_isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please sign in with Google first'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Navigate to QR scanning screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ChildScanScreen()),
     );
   }
 
@@ -162,6 +238,73 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
                 ),
               ),
               const SizedBox(height: 50),
+
+              // Google Sign-In Button (only show if not authenticated)
+              if (!_isAuthenticated) ...[
+                ElevatedButton.icon(
+                  onPressed: _isLoading ? null : _handleGoogleSignIn,
+                  icon: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.black,
+                          ),
+                        )
+                      : const Text('🔐', style: TextStyle(fontSize: 24)),
+                  label: Text(
+                    _isLoading ? 'Signing in...' : 'Sign in with Google',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                const Text(
+                  'Sign in first, then scan QR or enter code',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.white54),
+                ),
+                const SizedBox(height: 20),
+              ],
+
+              // Show authenticated status
+              if (_isAuthenticated) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green, width: 1),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Signed in ✓',
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+              ],
 
               // QR Code Button
               ElevatedButton(

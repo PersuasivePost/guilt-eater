@@ -33,19 +33,31 @@ def verify_password_sha256(stored: str, provided_password: str) -> bool:
     return h.hexdigest() == digest
 
 
-def create_access_token(subject: str, idle_seconds: Optional[int] = None) -> str:
+def create_access_token(subject: str, idle_seconds: Optional[int] = None, session_token: Optional[str] = None) -> str:
     """Create JWT with expiry set to now + idle_seconds (sliding inactivity window).
 
     The client should include the token on each request; the server can refresh the token
     and return a new one when activity occurs (sliding window).
+    
+    For parent accounts: session_token is embedded in JWT to enforce single device access.
     """
     now = datetime.utcnow()
     if idle_seconds is None:
         idle_seconds = JWT_IDLE_SECONDS
     expires = now + timedelta(seconds=idle_seconds)
     payload = {"sub": subject, "exp": int(expires.timestamp()), "iat": int(now.timestamp())}
+    
+    # Include session_token for parent accounts to enforce single device access
+    if session_token:
+        payload["session_token"] = session_token
+    
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
     return token
+
+
+def create_session_token() -> str:
+    """Generate a unique session token for single device enforcement (parents only)."""
+    return os.urandom(32).hex()
 
 
 def verify_access_token(token: str) -> Optional[dict]:
@@ -76,6 +88,8 @@ async def get_current_user(
 
     Sets header 'X-Access-Token' with a refreshed token. If token is missing/invalid raises 401.
     Returns the User object from database.
+    
+    For parent accounts: Also validates session token to ensure single device access.
     """
     if not credentials or not credentials.credentials:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -90,8 +104,18 @@ async def get_current_user(
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     
-    # create a new token with fresh idle window
-    new_token = create_access_token(user_id)
+    # For parent accounts: Validate session token to enforce single device access
+    # The session token is embedded in the JWT payload during login
+    if user.role == 'parent':
+        session_token_from_jwt = payload.get('session_token')
+        if not session_token_from_jwt or session_token_from_jwt != user.session_token:
+            raise HTTPException(
+                status_code=401, 
+                detail="Session expired. This account is logged in on another device."
+            )
+    
+    # create a new token with fresh idle window (and include session_token for parents)
+    new_token = create_access_token(user_id, session_token=user.session_token if user.role == 'parent' else None)
     # set new token in response header so client can update
     response.headers['X-Access-Token'] = new_token
     return user

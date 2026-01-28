@@ -49,6 +49,7 @@ class User(Base):
     picture = Column(String, nullable=True)
     role = Column(Enum(RoleEnum), nullable=False, default=RoleEnum.individual)
     parent_id = Column(String, ForeignKey("users.id"), nullable=True)
+    session_token = Column(String, nullable=True)  # For single device session enforcement (parents only)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     children = relationship("User", backref="parent", remote_side=[id])

@@ -49,8 +49,11 @@ async def token_exchange(payload: dict, db: Session = Depends(get_db)):
     if not email:
         raise HTTPException(status_code=400, detail='email not present in token')
 
+    # Check if user exists
     user = db.query(User).filter(User.email == email).first()
+    
     if not user:
+        # New user - create account with requested role
         print(f"Creating new user: {email} with role: {user_role}")
         user = User(
             email=email, 
@@ -62,8 +65,28 @@ async def token_exchange(payload: dict, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(user)
     else:
+        # Existing user - verify they're not trying to use same account for different role
+        if user.role != user_role:
+            print(f"User {email} tried to sign in as {user_role} but is already registered as {user.role}")
+            raise HTTPException(
+                status_code=403, 
+                detail=f'This Google account is already registered as {user.role}. Please use a different account for {user_role} role.'
+            )
         print(f"User already exists: {email} with role: {user.role}")
 
-    token = security.create_access_token(user.id)
+    # For parent accounts: enforce single device session
+    if user.role == 'parent':
+        # Generate new session token and invalidate previous sessions
+        new_session_token = security.create_session_token()
+        user.session_token = new_session_token
+        db.commit()
+        db.refresh(user)
+        print(f"Parent {user.id} logged in - new session token generated, old sessions invalidated")
+
+    # Create JWT token - include session_token for parents to enforce single device access
+    token = security.create_access_token(
+        user.id, 
+        session_token=user.session_token if user.role == 'parent' else None
+    )
     print(f"Successfully created JWT for user {user.id}")
     return JSONResponse({'access_token': token, 'token_type': 'bearer'})

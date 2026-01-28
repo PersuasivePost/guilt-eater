@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../auth/individual_login_screen.dart';
 import '../../auth/parent_login_screen.dart';
-import '../../auth/child_login_screen.dart';
+import '../../auth/child_auth_screen.dart';
 
 class UserTypeSelectionScreen extends StatelessWidget {
   const UserTypeSelectionScreen({super.key});
@@ -71,7 +71,7 @@ class UserTypeSelectionScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ChildLoginScreen(),
+                            builder: (context) => const ChildAuthScreen(),
                           ),
                         );
                       },
