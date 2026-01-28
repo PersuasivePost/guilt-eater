@@ -17,7 +17,7 @@ class _ParentLoginScreenState extends State<ParentLoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final token = await _authService.signInWithGoogle();
+      final token = await _authService.signInWithGoogle(role: 'parent');
 
       if (token != null && mounted) {
         // Navigate to welcome screen on success

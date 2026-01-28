@@ -17,11 +17,16 @@ GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 @router.post('/token')
 async def token_exchange(payload: dict, db: Session = Depends(get_db)):
     """Accepts a Google id_token (from Android mobile) and returns our JWT.
-    payload: {"id_token": "..."}
+    payload: {"id_token": "...", "role": "individual|parent|child"}
     """
     token_string = payload.get('id_token')
     if not token_string:
         raise HTTPException(status_code=400, detail='id_token required')
+    
+    # Get role from payload, default to 'individual' if not provided
+    user_role = payload.get('role', 'individual')
+    if user_role not in ['individual', 'parent', 'child']:
+        raise HTTPException(status_code=400, detail='invalid role. Must be individual, parent, or child')
 
     # Verify id_token using Google's official library
     try:
@@ -46,13 +51,18 @@ async def token_exchange(payload: dict, db: Session = Depends(get_db)):
 
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        print(f"Creating new user: {email}")
-        user = User(email=email, name=claims.get('name'), picture=claims.get('picture'))
+        print(f"Creating new user: {email} with role: {user_role}")
+        user = User(
+            email=email, 
+            name=claims.get('name'), 
+            picture=claims.get('picture'),
+            role=user_role
+        )
         db.add(user)
         db.commit()
         db.refresh(user)
     else:
-        print(f"User already exists: {email}")
+        print(f"User already exists: {email} with role: {user.role}")
 
     token = security.create_access_token(user.id)
     print(f"Successfully created JWT for user {user.id}")

@@ -17,9 +17,10 @@ class AuthService {
   static const String _backendUrl = 'http://10.0.2.2:8000';
 
   /// Sign in with Google and get JWT from backend
-  Future<String?> signInWithGoogle() async {
+  /// [role] can be 'individual', 'parent', or 'child'
+  Future<String?> signInWithGoogle({String role = 'individual'}) async {
     try {
-      print('Starting Google Sign-In...');
+      print('Starting Google Sign-In with role: $role...');
 
       // Sign in with Google
       final GoogleSignInAccount? account = await _googleSignIn.signIn();
@@ -40,12 +41,12 @@ class AuthService {
 
       print('Got ID token, exchanging with backend at $_backendUrl/auth/token');
 
-      // Exchange id_token with backend for our JWT
+      // Exchange id_token with backend for our JWT, including role
       final response = await http
           .post(
             Uri.parse('$_backendUrl/auth/token'),
             headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'id_token': idToken}),
+            body: jsonEncode({'id_token': idToken, 'role': role}),
           )
           .timeout(
             const Duration(seconds: 10),
@@ -65,7 +66,7 @@ class AuthService {
         // Store the token securely
         await _storage.write(key: _tokenKey, value: accessToken);
 
-        print('Successfully got JWT token');
+        print('Successfully got JWT token for role: $role');
         return accessToken;
       } else {
         print('Backend error: ${response.statusCode} - ${response.body}');

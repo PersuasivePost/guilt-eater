@@ -17,7 +17,7 @@ class _IndividualLoginScreenState extends State<IndividualLoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final token = await _authService.signInWithGoogle();
+      final token = await _authService.signInWithGoogle(role: 'individual');
 
       if (token != null && mounted) {
         // Navigate to welcome screen on success
