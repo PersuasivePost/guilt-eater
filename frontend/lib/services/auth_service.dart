@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import '../config/app_config.dart';
 
 class AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -15,8 +16,6 @@ class AuthService {
   );
   final _storage = const FlutterSecureStorage();
   static const String _tokenKey = 'access_token';
-  // Use 10.0.2.2 for Android emulator to reach host machine's localhost
-  static const String _backendUrl = 'http://10.0.2.2:8000';
 
   /// Sign in with Google and get JWT from backend
   /// [role] can be 'individual', 'parent', or 'child'
@@ -46,13 +45,13 @@ class AuthService {
       }
 
       debugPrint(
-        'Got ID token, exchanging with backend at $_backendUrl/auth/token',
+        'Got ID token, exchanging with backend at ${AppConfig.authTokenUrl}',
       );
 
       // Exchange id_token with backend for our JWT, including role
       final response = await http
           .post(
-            Uri.parse('$_backendUrl/auth/token'),
+            Uri.parse(AppConfig.authTokenUrl),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({'id_token': idToken, 'role': role}),
           )

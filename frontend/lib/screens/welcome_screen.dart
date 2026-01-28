@@ -3,6 +3,7 @@ import '../services/auth_service.dart';
 import 'onboarding/splash_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../config/app_config.dart';
 
 class WelcomeScreen extends StatefulWidget {
   final String username;
@@ -33,7 +34,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/me'),
+        // Use 10.0.2.2:8000 for Android emulator, or your local IP for real device
+        // Uri.parse('http://10.0.2.2:8000/api/me'),
+        // Example: emulator -> Uri.parse('http://10.0.2.2:8000/api/me')
+        // Example real device -> Uri.parse('http://192.168.1.40:8000/api/me')
+        Uri.parse(AppConfig.userMeUrl),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

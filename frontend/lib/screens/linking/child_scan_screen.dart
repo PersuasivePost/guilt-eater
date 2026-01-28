@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../services/auth_service.dart';
 import 'link_success_screen.dart';
+import '../../config/app_config.dart';
 
 class ChildScanScreen extends StatefulWidget {
   const ChildScanScreen({super.key});
@@ -53,7 +54,10 @@ class _ChildScanScreenState extends State<ChildScanScreen> {
 
       // Call backend to verify and link
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8000/api/linking/verify-linking-code'),
+        // Use http://10.0.2.2:8000 for Android emulator, or your local IP for real device
+        // Example emulator: Uri.parse('http://10.0.2.2:8000/api/linking/verify-linking-code')
+        // Example local device: Uri.parse('http://192.168.1.40:8000/api/linking/verify-linking-code')
+        Uri.parse(AppConfig.verifyLinkingCodeUrl),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

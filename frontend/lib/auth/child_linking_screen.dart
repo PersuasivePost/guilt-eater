@@ -5,6 +5,7 @@ import 'dart:convert';
 import '../services/auth_service.dart';
 import '../screens/linking/link_success_screen.dart';
 import '../screens/linking/child_scan_screen.dart';
+import '../config/app_config.dart';
 
 class ChildLinkingScreen extends StatefulWidget {
   const ChildLinkingScreen({super.key});
@@ -66,7 +67,9 @@ class _ChildLinkingScreenState extends State<ChildLinkingScreen> {
       }
 
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8000/api/linking/verify-linking-code'),
+        // Use 10.0.2.2:8000 for Android emulator, or your local IP for real device
+        // Example: Uri.parse('http://10.0.2.2:8000/api/linking/verify-linking-code'),
+        Uri.parse(AppConfig.verifyLinkingCodeUrl),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -77,7 +80,7 @@ class _ChildLinkingScreenState extends State<ChildLinkingScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (mounted) {
-          // Navigate to success screen
+          // Navigate toik success screen
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(

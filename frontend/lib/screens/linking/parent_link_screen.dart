@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../services/auth_service.dart';
 import '../welcome_screen.dart';
+import '../../config/app_config.dart';
 
 class ParentLinkScreen extends StatefulWidget {
   const ParentLinkScreen({super.key});
@@ -41,7 +42,10 @@ class _ParentLinkScreenState extends State<ParentLinkScreen> {
       }
 
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8000/api/linking/generate-linking-code'),
+        // Use 10.0.2.2:8000 for Android emulator, or your local IP for real device
+        // Uri.parse('http://10.0.2.2:8000/api/linking/generate-linking-code'),
+        // Uri.parse('http://192.168.1.40:8000/api/linking/generate-linking-code'),
+        Uri.parse(AppConfig.generateLinkingCodeUrl),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
