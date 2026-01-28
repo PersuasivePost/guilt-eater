@@ -60,14 +60,22 @@ def verify_access_token(token: str) -> Optional[dict]:
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Response
+from sqlalchemy.orm import Session
+from db.session import get_db
+from models.models import User
 
 http_bearer = HTTPBearer(auto_error=False)
 
 
-async def get_current_user(response: Response, credentials: Optional[HTTPAuthorizationCredentials] = Depends(http_bearer)) -> str:
-    """Dependency to extract user id (subject) from Bearer token, verify it, and refresh token expiry.
+async def get_current_user(
+    response: Response, 
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(http_bearer),
+    db: Session = Depends(get_db)
+) -> User:
+    """Dependency to extract user from Bearer token, verify it, and refresh token expiry.
 
     Sets header 'X-Access-Token' with a refreshed token. If token is missing/invalid raises 401.
+    Returns the User object from database.
     """
     if not credentials or not credentials.credentials:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -75,9 +83,15 @@ async def get_current_user(response: Response, credentials: Optional[HTTPAuthori
     payload = verify_access_token(token)
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
-    subject = payload.get('sub')
+    user_id = payload.get('sub')
+    
+    # Fetch user from database
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    
     # create a new token with fresh idle window
-    new_token = create_access_token(subject)
+    new_token = create_access_token(user_id)
     # set new token in response header so client can update
     response.headers['X-Access-Token'] = new_token
-    return subject
+    return user

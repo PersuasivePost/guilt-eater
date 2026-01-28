@@ -51,7 +51,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         throw Exception('Failed to fetch user info');
       }
     } catch (e) {
-      print('Error fetching user info: $e');
+  debugPrint('Error fetching user info: $e');
       setState(() {
         _userName = widget.username;
         _isLoading = false;

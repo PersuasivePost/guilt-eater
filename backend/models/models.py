@@ -55,6 +55,22 @@ class User(Base):
     goals = relationship("Goal", back_populates="user")
     wallets = relationship("WalletLedger", back_populates="user")
     transactions = relationship("Transaction", back_populates="user")
+    linking_codes = relationship("LinkingCode", back_populates="parent", foreign_keys="LinkingCode.parent_id")
+
+
+class LinkingCode(Base):
+    __tablename__ = "linking_codes"
+    id = Column(String, primary_key=True, default=gen_uuid)
+    parent_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    code = Column(String(6), unique=True, nullable=False, index=True)
+    is_used = Column(Boolean, default=False)
+    used_by_user_id = Column(String, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False)  # Code expires after 24 hours
+    used_at = Column(DateTime, nullable=True)
+
+    parent = relationship("User", back_populates="linking_codes", foreign_keys=[parent_id])
+    used_by = relationship("User", foreign_keys=[used_by_user_id])
 
 
 class Goal(Base):

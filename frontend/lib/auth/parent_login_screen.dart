@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import '../screens/welcome_screen.dart';
+import '../screens/linking/parent_link_screen.dart';
 
 class ParentLoginScreen extends StatefulWidget {
   const ParentLoginScreen({super.key});
@@ -20,12 +20,10 @@ class _ParentLoginScreenState extends State<ParentLoginScreen> {
       final token = await _authService.signInWithGoogle(role: 'parent');
 
       if (token != null && mounted) {
-        // Navigate to welcome screen on success
+        // Navigate to parent linking screen on success
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => const WelcomeScreen(username: 'Parent'),
-          ),
+          MaterialPageRoute(builder: (context) => const ParentLinkScreen()),
         );
       }
     } catch (e) {

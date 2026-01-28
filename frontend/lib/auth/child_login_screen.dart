@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../services/auth_service.dart';
+import '../screens/linking/link_success_screen.dart';
 
 class ChildLoginScreen extends StatefulWidget {
   const ChildLoginScreen({super.key});
@@ -9,11 +13,13 @@ class ChildLoginScreen extends StatefulWidget {
 }
 
 class _ChildLoginScreenState extends State<ChildLoginScreen> {
+  final _authService = AuthService();
   final List<TextEditingController> _controllers = List.generate(
     6,
     (index) => TextEditingController(),
   );
   final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -38,23 +44,63 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
     }
   }
 
-  void _handleContinue() {
+  void _handleContinue() async {
     final code = _controllers.map((c) => c.text).join();
-    if (code.length == 6) {
-      // TODO: Implement child account linking
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Child linking feature coming soon!'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-    } else {
+    if (code.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter complete 6-digit code'),
           backgroundColor: Colors.red,
         ),
       );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final token = await _authService.getToken();
+      if (token == null) {
+        throw Exception('Not authenticated. Please sign in with Google first.');
+      }
+
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8000/api/linking/verify-linking-code'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'code': code}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (mounted) {
+          // Navigate to success screen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => LinkSuccessScreen(
+                parentName: data['parent_name'] ?? 'Parent',
+                childName: data['child_name'] ?? 'Child',
+              ),
+            ),
+          );
+        }
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['detail'] ?? 'Failed to verify code');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -234,7 +280,7 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
               SizedBox(
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _handleContinue,
+                  onPressed: _isLoading ? null : _handleContinue,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black,
@@ -242,10 +288,22 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Continue',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.black,
+                          ),
+                        )
+                      : const Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
             ],

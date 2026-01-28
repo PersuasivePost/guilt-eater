@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from db.session import engine, Base
 from api.router import router as api_router
 from auth.router import router as auth_router
+from api.linking import router as linking_router
 
 app = FastAPI(title="Guilt Eater Backend")
 
@@ -24,6 +25,7 @@ def on_startup():
 
 app.include_router(api_router, prefix="/api")
 app.include_router(auth_router, prefix="/auth")
+app.include_router(linking_router, prefix="/api/linking")
 
 @app.get("/")
 def root():

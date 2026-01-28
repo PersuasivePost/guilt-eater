@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -20,16 +22,20 @@ class AuthService {
   /// [role] can be 'individual', 'parent', or 'child'
   Future<String?> signInWithGoogle({String role = 'individual'}) async {
     try {
-      print('Starting Google Sign-In with role: $role...');
+  debugPrint('Starting Google Sign-In with role: $role...');
 
-      // Sign in with Google
-      final GoogleSignInAccount? account = await _googleSignIn.signIn();
+      // Try silent sign-in first (returns previously signed in account if available)
+      GoogleSignInAccount? account = await _googleSignIn.signInSilently();
+
+      // If silent sign-in didn't return an account, prompt the user
+      account ??= await _googleSignIn.signIn();
+
       if (account == null) {
-        print('User cancelled sign-in');
+        debugPrint('User cancelled sign-in');
         return null;
       }
 
-      print('Google account signed in: ${account.email}');
+      debugPrint('Google account signed in: ${account.email}');
 
       // Get authentication details
       final GoogleSignInAuthentication auth = await account.authentication;
@@ -39,7 +45,7 @@ class AuthService {
         throw Exception('Failed to get ID token from Google');
       }
 
-      print('Got ID token, exchanging with backend at $_backendUrl/auth/token');
+  debugPrint('Got ID token, exchanging with backend at $_backendUrl/auth/token');
 
       // Exchange id_token with backend for our JWT, including role
       final response = await http
@@ -57,7 +63,7 @@ class AuthService {
             },
           );
 
-      print('Backend response status: ${response.statusCode}');
+  debugPrint('Backend response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -66,14 +72,30 @@ class AuthService {
         // Store the token securely
         await _storage.write(key: _tokenKey, value: accessToken);
 
-        print('Successfully got JWT token for role: $role');
+  debugPrint('Successfully got JWT token for role: $role');
         return accessToken;
       } else {
-        print('Backend error: ${response.statusCode} - ${response.body}');
+  debugPrint('Backend error: ${response.statusCode} - ${response.body}');
         throw Exception('Backend auth failed: ${response.body}');
       }
+    } on PlatformException catch (e) {
+      // PlatformException may wrap Google Play services errors (ApiException)
+      debugPrint(
+        'PlatformException during Google Sign-In: ${e.code} - ${e.message}',
+      );
+
+      // ApiException code 7 is a network/play-services error on Android
+      if (e.code == 'network_error' ||
+          (e.message != null && e.message!.contains('ApiException: 7'))) {
+        throw Exception(
+          'Google Sign-In failed with network/Play Services error (ApiException 7). '
+          'Check emulator/device internet, ensure AVD uses a Google Play image and has a Google account, or test on a physical device.',
+        );
+      }
+
+      rethrow;
     } catch (e) {
-      print('Sign in error: $e');
+  debugPrint('Sign in error: $e');
       rethrow;
     }
   }
