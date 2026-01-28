@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import '../auth/login_screen.dart';
+import 'onboarding/splash_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -66,10 +66,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       await authService.signOut();
 
       if (context.mounted) {
-        // Navigate back to login screen
+        // Navigate back to splash/onboarding screen
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          MaterialPageRoute(builder: (context) => const SplashScreen()),
         );
       }
     } catch (e) {
