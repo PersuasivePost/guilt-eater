@@ -4,7 +4,7 @@
 
 ## 📱 **ONBOARDING FLOW**
 
-### **Screen 1: Splash Screen**
+### **Screen 1: Splash Screen** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -22,7 +22,7 @@
 
 ---
 
-### **Screen 2: Welcome Screen**
+### **Screen 2: Welcome Screen** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -40,11 +40,11 @@
 └─────────────────────────┘
 ```
 
-**Screens 3-5**: Feature carousel (3 slides)
+**Screens 3-5**: Feature carousel (3 slides) -> Akhil
 
 ---
 
-### **Screen 6: User Type Selection**
+### **Screen 6: User Type Selection** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -78,7 +78,7 @@
 
 ## 🔐 **AUTHENTICATION FLOW**
 
-### **Screen 7A: Individual Login/Signup**
+### **Screen 7A: Individual Login/Signup** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -102,7 +102,7 @@
 
 ---
 
-### **Screen 7B: Parent Login/Signup**
+### **Screen 7B: Parent Login/Signup** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -127,7 +127,7 @@
 
 ---
 
-### **Screen 7C: Child Login/Signup**
+### **Screen 7C: Child Login/Signup** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -159,7 +159,7 @@
 
 ## 👨‍👧 **PARENT-CHILD LINKING FLOW**
 
-### **Screen 8A: Parent - After First Login**
+### **Screen 8A: Parent - After First Login** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -190,7 +190,7 @@
 
 ---
 
-### **Screen 8B: Child - Scanning QR**
+### **Screen 8B: Child - Scanning QR** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -219,7 +219,7 @@
 
 ---
 
-### **Screen 8C: Link Successful**
+### **Screen 8C: Link Successful** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -244,7 +244,7 @@
 
 ## 🚀 **FIRST TIME SETUP**
 
-### **Screen 9: Permissions Request (Both Individual & Child)**
+### **Screen 9: Permissions Request (Both Individual & Child)** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -287,7 +287,7 @@
 
 ## 📊 **MAIN DASHBOARD - INDIVIDUAL USER**
 
-### **Screen 10A: Dashboard (Individual)**
+### **Screen 10A: Dashboard (Individual)** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -342,7 +342,7 @@
 
 ---
 
-### **Screen 10B: Dashboard (Child)**
+### **Screen 10B: Dashboard (Child)** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -396,7 +396,7 @@
 
 ---
 
-### **Screen 10C: Dashboard (Parent)**
+### **Screen 10C: Dashboard (Parent)** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -452,7 +452,7 @@
 
 ## ➕ **CREATE COMMITMENT FLOW (INDIVIDUAL)**
 
-### **Screen 11: Select Apps**
+### **Screen 11: Select Apps** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -493,7 +493,7 @@
 
 ---
 
-### **Screen 12: Set Time Limits**
+### **Screen 12: Set Time Limits** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -539,7 +539,7 @@
 
 ---
 
-### **Screen 13: Set Stakes**
+### **Screen 13: Set Stakes** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -590,7 +590,7 @@
 
 ---
 
-### **Screen 14: Review & Confirm**
+### **Screen 14: Review & Confirm** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -637,7 +637,7 @@
 
 ---
 
-### **Screen 15: Payment Processing**
+### **Screen 15: Payment Processing** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -656,7 +656,7 @@
 
 ---
 
-### **Screen 16: Success!**
+### **Screen 16: Success!** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -690,7 +690,7 @@
 
 ## 👨‍👧 **PARENT: SET CHILD LIMITS**
 
-### **Screen 17: Parent - Add Money for Child**
+### **Screen 17: Parent - Add Money for Child** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -730,7 +730,7 @@
 
 ---
 
-### **Screen 18: Parent - Set App Limits**
+### **Screen 18: Parent - Set App Limits** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -765,7 +765,7 @@
 
 ---
 
-### **Screen 19: Parent - Set Limits & Penalties**
+### **Screen 19: Parent - Set Limits & Penalties** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -816,7 +816,7 @@
 
 ---
 
-### **Screen 20: Parent - Confirmation**
+### **Screen 20: Parent - Confirmation** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -851,7 +851,7 @@
 
 ## 💰 **WALLET SCREENS**
 
-### **Screen 21: Wallet - Individual**
+### **Screen 21: Wallet - Individual** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -902,7 +902,7 @@
 
 ---
 
-### **Screen 22: Add Money**
+### **Screen 22: Add Money** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -941,7 +941,7 @@
 
 ---
 
-### **Screen 23: Razorpay Payment**
+### **Screen 23: Razorpay Payment** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -975,7 +975,7 @@
 
 ---
 
-### **Screen 24: Withdrawal**
+### **Screen 24: Withdrawal** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -1015,7 +1015,7 @@
 
 ## 📊 **STATISTICS & ANALYTICS**
 
-### **Screen 25: Statistics**
+### **Screen 25: Statistics** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -1074,7 +1074,7 @@
 
 ## 👤 **PROFILE & SETTINGS**
 
-### **Screen 26: Profile**
+### **Screen 26: Profile** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -1137,7 +1137,7 @@
 
 ---
 
-### **Screen 27: Commitment History**
+### **Screen 27: Commitment History** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -1193,7 +1193,7 @@
 
 ---
 
-### **Screen 28: Settings**
+### **Screen 28: Settings** -> Ashvatth
 
 ```
 ┌─────────────────────────┐
@@ -1246,7 +1246,7 @@
 
 ## ⚠️ **VIOLATION & WARNING SCREENS**
 
-### **Screen 29: Warning Alert**
+### **Screen 29: Warning Alert** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -1281,7 +1281,7 @@
 
 ---
 
-### **Screen 30: Penalty Alert**
+### **Screen 30: Penalty Alert** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -1322,7 +1322,7 @@
 
 ---
 
-### **Screen 31: App Blocked**
+### **Screen 31: App Blocked** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -1365,7 +1365,7 @@
 
 ## 🎯 **FUTURE FEATURES**
 
-### **Screen 32: Leaderboard (Coming Soon)**
+### **Screen 32: Leaderboard (Coming Soon)** -> Akhil
 
 ```
 ┌─────────────────────────┐
@@ -1415,7 +1415,7 @@
 
 ---
 
-### **Screen 33: Streak Tracker**
+### **Screen 33: Streak Tracker** -> Akhil
 
 ```
 ┌─────────────────────────┐
