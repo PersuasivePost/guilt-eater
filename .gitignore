@@ -1,1 +1,70 @@
-archives
+####################################
+# GLOBAL / OS / EDITOR
+####################################
+
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+
+.idea/
+*.iml
+*.ipr
+*.iws
+.atom/
+.vscode/
+.history
+.svn/
+
+####################################
+# BACKEND (FastAPI / Python)
+####################################
+
+# Environment variables
+backend/.env
+
+# Virtual environments
+backend/.venv/
+backend/venv/
+backend/env/
+
+# Python cache
+backend/__pycache__/
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/**/*.pyo
+
+####################################
+# FRONTEND (Flutter)
+####################################
+
+# Flutter / Dart
+frontend/.dart_tool/
+frontend/.flutter-plugins-dependencies
+frontend/.pub-cache/
+frontend/.pub/
+frontend/build/
+frontend/coverage/
+
+# Docs & generated files
+frontend/**/doc/api/
+frontend/**/ios/Flutter/.last_build_id
+
+# Android build outputs
+frontend/android/app/debug/
+frontend/android/app/profile/
+frontend/android/app/release/
+
+# Symbolication
+frontend/app.*.symbols
+frontend/app.*.map.json
+
+####################################
+# OPTIONAL / TOOLING
+####################################
+
+frontend/.swiftpm/
+frontend/migrate_working_dir/
+.build/
+.buildlog/
